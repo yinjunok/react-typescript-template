@@ -1,0 +1,10 @@
+{
+  "presets": [
+    ["env", {
+      "targets": {
+        "browsers": ["last 5 versions", "not ie <= 8", "> 1%" ],
+        "useBuiltIns": true
+      }
+    }]
+  ]
+}
