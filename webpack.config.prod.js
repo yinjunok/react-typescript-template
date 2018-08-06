@@ -1,10 +1,14 @@
 const path = require('path');
+const HappyPack = require('happypack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const ManifestPlugin = require('webpack-manifest-plugin');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+
+const happyThreadPool = HappyPack.ThreadPool({ size: 5 });
 
 const babelLoader = {
   loader: 'babel-loader',
@@ -28,22 +32,9 @@ module.exports = {
     rules: [
       {
         test: /\.tsx?$/,
-        use: [
-          babelLoader,
-          {
-            loader: 'awesome-typescript-loader',
-            options: {
-              useBabel: true,
-              useCache: true,
-              forceIsolatedModules: true,
-            },
-          },
-          {
-            loader: 'tslint-loader',
-            options: {
-              typeCheck: true,
-            }
-          }
+        use: 'happypack/loader?id=tsx',
+        include: [
+          path.resolve(__dirname, 'src'),
         ],
       },
       {
@@ -90,7 +81,7 @@ module.exports = {
         loader: 'file-loader',
         options: {
           name: '[name]-[hash:8].[ext]',
-          outputPath: 'asset/font/'
+          outputPath: 'asset/font/',
         }
       }
     ]
@@ -102,7 +93,7 @@ module.exports = {
         commons: {
           test: /[\\/]node_modules[\\/]/,
           name: "vendors",
-          chunks: "all"
+          chunks: "all",
         }
       }
     },
@@ -110,7 +101,7 @@ module.exports = {
       new UglifyJsPlugin({
         cache: true,
         parallel: true,
-        sourceMap: true // set to true if you want JS source maps
+        sourceMap: true,
       }),
       new OptimizeCSSAssetsPlugin({})
     ]
@@ -123,10 +114,30 @@ module.exports = {
       template: 'src/html/index.html'
     }),
     new MiniCssExtractPlugin({
-      // Options similar to the same options in webpackOptions.output
-      // both options are optional
       filename: "asset/css/[name]-[hash:8].css",
       chunkFilename: "[id].css"
+    }),
+    new ForkTsCheckerWebpackPlugin({ checkSyntacticErrors: true }),
+    new HappyPack({
+      id: 'tsx',
+      threads: 4,
+      threadPool: happyThreadPool,
+      loaders: [
+        babelLoader,
+        {
+          loader: 'ts-loader',
+          options: {
+            transpileOnly: true,
+            happyPackMode: true,
+          }
+        },
+        {
+          loader: 'tslint-loader',
+          options: {
+            typeCheck: true,
+          }
+        }
+      ],
     }),
     new ManifestPlugin(),
   ],

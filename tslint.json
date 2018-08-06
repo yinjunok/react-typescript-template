@@ -1,10 +1,15 @@
 {
-  "extends": ["tslint:latest", "tslint-react", "tslint-config-prettier"],
+  "extends": [
+    "tslint:latest",
+    "tslint-react",
+    "tslint-eslint-rules",
+    "tslint-config-prettier"
+  ],
   "rules": {
     // override tslint-react rules here
     // "indent":[true, "spaces", 2],
     "ordered-imports": false,
     "quotemark": [true, "single", "jsx-single"],
-    "indent": [true, "spaces", 2]
+    "ter-indent": [true, 2]
   }
 }

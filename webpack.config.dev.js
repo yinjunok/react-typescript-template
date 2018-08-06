@@ -1,6 +1,10 @@
 const path = require('path');
 const webpack = require('webpack');
+const HappyPack = require('happypack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+
+const happyThreadPool = HappyPack.ThreadPool({ size: 5 });
 
 const babelLoader = {
   loader: 'babel-loader',
@@ -26,23 +30,10 @@ module.exports = {
     rules: [
       {
         test: /\.tsx?$/,
-        use: [
-          babelLoader,
-          {
-            loader: 'awesome-typescript-loader',
-            options: {
-              useBabel: true,
-              useCache: true,
-              forceIsolatedModules: true,
-            },
-          },
-          {
-            loader: 'tslint-loader',
-            options: {
-              typeCheck: true,
-            }
-          }
+        include: [
+          path.resolve(__dirname, 'src'),
         ],
+        use: 'happypack/loader?id=tsx',
       },
       {
         test: /\.js$/,
@@ -53,16 +44,7 @@ module.exports = {
       },
       {
         test: /\.css$/,
-        use: [
-          'style-loader',
-          {
-            loader: 'css-loader',
-            options: {
-              importLoaders: 1,
-            },
-          },
-          'postcss-loader',
-        ],
+        use: 'happypack/loader?id=css',
         include: [
           path.resolve(__dirname, 'src'),
         ],
@@ -98,6 +80,43 @@ module.exports = {
       template: 'src/html/index.html'
     }),
     new webpack.NamedModulesPlugin(),
-    new webpack.HotModuleReplacementPlugin()
+    new webpack.HotModuleReplacementPlugin(),
+    new ForkTsCheckerWebpackPlugin({ checkSyntacticErrors: true }),
+    new HappyPack({
+      id: 'tsx',
+      threads: 4,
+      threadPool: happyThreadPool,
+      loaders: [
+        babelLoader,
+        {
+          loader: 'ts-loader',
+          options: {
+            transpileOnly: true,
+            happyPackMode: true,
+          }
+        },
+        {
+          loader: 'tslint-loader',
+          options: {
+            typeCheck: true,
+          }
+        }
+      ],
+    }),
+    new HappyPack({
+      id: 'css',
+      threads: 4,
+      threadPool: happyThreadPool,
+      loaders: [
+        'style-loader',
+        {
+          loader: 'css-loader',
+          options: {
+            importLoaders: 1,
+          },
+        },
+        'postcss-loader',
+      ],
+    }),
   ],
 }

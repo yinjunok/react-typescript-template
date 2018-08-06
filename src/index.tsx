@@ -7,7 +7,7 @@ class App extends React.Component {
     return (
       <div className='container'>
         <div className='bg' />
-        <p>你吵到我用 TNT 了</p>
+        <p>你吵到我用 TNT 了!</p>
       </div>
     )
   }
